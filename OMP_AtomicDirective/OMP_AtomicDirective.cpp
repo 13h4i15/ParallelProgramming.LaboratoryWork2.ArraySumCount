@@ -1,41 +1,38 @@
 ﻿#include <iostream>
 #include <omp.h>
 
-const int array_size = 1200000;
+const int ARRAY_SIZE = 1200000;
 
 int main()
 {
+	#pragma comment(linker, "/STACK:16777216")
 
-#pragma comment(linker, "/STACK:12777216")
-
-	int input_data[array_size];
-	for (unsigned int i = 0; i < array_size; ++i)
+	int* inputData = new int[ARRAY_SIZE];
+	for (int i = 0; i < ARRAY_SIZE; ++i)
 	{
-		input_data[i] = 1;
+		inputData[i] = 1;
 	}
 
 	int sum = 0;
 
 	omp_set_num_threads(12);
 
-	double start_time = omp_get_wtime();
+	double startTime = omp_get_wtime();
 
-#pragma omp parallel shared(input_data, sum)
+	#pragma omp parallel shared(inputData, sum)
 	{
 		#pragma omp for
-		for (int i = 0; i < array_size; ++i)
+		for (int i = 0; i < ARRAY_SIZE; ++i)
 		{
 			#pragma omp atomic
-			sum += input_data[i];
+			sum += inputData[i];
 		}
 	}
 
-	double end_time = omp_get_wtime();
+	double endTime = omp_get_wtime();
 
 	printf("\nTotal Sum = %d", sum);
-	printf("\nTime of work is = %f", end_time - start_time);
+	printf("\nTime of work is = %f", endTime - startTime);
 
-	std::cout << sum;
 	return 0;
 }
-

@@ -1,62 +1,62 @@
 ﻿#include <iostream>
 #include "mpi.h"
 
-const int array_size = 1200000;
+const int ARRAY_SIZE = 1200000;
 
 int main(int argc, char* argv[])
 {
-#pragma comment(linker, "/STACK:12777216")
+	#pragma comment(linker, "/STACK:12777216")
 
-	int proc_rank, proc_size;
+	int procRank, procSize;
 
 	MPI_Init(&argc, &argv);
 
-	MPI_Comm_size(MPI_COMM_WORLD, &proc_size);
-	MPI_Comm_rank(MPI_COMM_WORLD, &proc_rank);
-	
-	int input_data[array_size];
-	if (proc_rank == 0)
+	MPI_Comm_size(MPI_COMM_WORLD, &procSize);
+	MPI_Comm_rank(MPI_COMM_WORLD, &procRank);
+
+	int* inputData = new int[ARRAY_SIZE];
+	if (procRank == 0)
 	{
-		for (unsigned int i = 0; i < array_size; ++i)
+		for (int i = 0; i < ARRAY_SIZE; ++i)
 		{
-			input_data[i] = 1;
+			inputData[i] = 1;
 		}
 
-		for (unsigned int i = 1; i < proc_size; ++i)
+		for (int i = 1; i < procSize; ++i)
 		{
-			MPI_Send(&input_data, array_size, MPI_INT, i, 0, MPI_COMM_WORLD);
+			MPI_Send(inputData, ARRAY_SIZE, MPI_INT, i, 0, MPI_COMM_WORLD);
 		}
 	}
 	else
 	{
 		MPI_Status status;
-		MPI_Recv(&input_data, array_size, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
+		MPI_Recv(inputData, ARRAY_SIZE, MPI_INT, 0, 0, MPI_COMM_WORLD, &status);
 	}
 
-	double start_time = MPI_Wtime();
+	double startTime = MPI_Wtime();
 
 	int subtotal = 0;
 
-	int work_size = array_size / proc_size;
-	int beginning_position = work_size * proc_rank;
-	for (int i = beginning_position; i < beginning_position + work_size; ++i)
+	int workSize = ARRAY_SIZE / procSize;
+	int beginningPosition = workSize * procRank;
+	for (int i = beginningPosition; i < beginningPosition + workSize; ++i)
 	{
-		subtotal += input_data[i];
+		subtotal += inputData[i];
 	}
 
-	if (proc_rank == 0)
+	if (procRank == 0)
 	{
 		int total = subtotal;
-		for (unsigned int i = 1; i < proc_size; ++i)
+		for (int i = 1; i < procSize; ++i)
 		{
 			MPI_Status status;
 			MPI_Recv(&subtotal, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
 			total += subtotal;
 		}
-		double end_time = MPI_Wtime();
+		double endTime = MPI_Wtime();
 
 		printf("\nTotal Sum = %d", total);
-		printf("\nTime of work is = %f", end_time - start_time);
+		printf("\nTime of work is = %f", endTime - startTime);
 	}
 	else
 	{
