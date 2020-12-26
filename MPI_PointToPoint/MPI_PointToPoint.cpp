@@ -1,12 +1,10 @@
 ﻿#include <iostream>
 #include "mpi.h"
 
-const int ARRAY_SIZE = 1200000;
+const int ARRAY_SIZE = 600000;
 
 int main(int argc, char* argv[])
 {
-	#pragma comment(linker, "/STACK:12777216")
-
 	int procRank, procSize;
 
 	MPI_Init(&argc, &argv);
@@ -14,15 +12,16 @@ int main(int argc, char* argv[])
 	MPI_Comm_size(MPI_COMM_WORLD, &procSize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &procRank);
 
-	int* inputData = new int[ARRAY_SIZE];
+	int* inputData = (int*)malloc(ARRAY_SIZE * sizeof(int));
+	int i;
 	if (procRank == 0)
 	{
-		for (int i = 0; i < ARRAY_SIZE; ++i)
+		for (i = 0; i < ARRAY_SIZE; ++i)
 		{
 			inputData[i] = 1;
 		}
 
-		for (int i = 1; i < procSize; ++i)
+		for (i = 1; i < procSize; ++i)
 		{
 			MPI_Send(inputData, ARRAY_SIZE, MPI_INT, i, 0, MPI_COMM_WORLD);
 		}
@@ -39,7 +38,7 @@ int main(int argc, char* argv[])
 
 	int workSize = ARRAY_SIZE / procSize;
 	int beginningPosition = workSize * procRank;
-	for (int i = beginningPosition; i < beginningPosition + workSize; ++i)
+	for (i = beginningPosition; i < beginningPosition + workSize; ++i)
 	{
 		subtotal += inputData[i];
 	}
@@ -47,7 +46,7 @@ int main(int argc, char* argv[])
 	if (procRank == 0)
 	{
 		int total = subtotal;
-		for (int i = 1; i < procSize; ++i)
+		for (i = 1; i < procSize; ++i)
 		{
 			MPI_Status status;
 			MPI_Recv(&subtotal, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &status);
@@ -64,5 +63,6 @@ int main(int argc, char* argv[])
 	}
 
 	MPI_Finalize();
+	free(inputData);
 	return 0;
 }

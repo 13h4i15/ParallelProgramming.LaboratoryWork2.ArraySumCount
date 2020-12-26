@@ -1,12 +1,10 @@
 ﻿#include <iostream>
 #include "mpi.h"
 
-const int ARRAY_SIZE = 1200000;
+const int ARRAY_SIZE = 600000;
 
 int main(int argc, char* argv[])
 {
-	#pragma comment(linker, "/STACK:21777216")
-
 	int procRank, procSize;
 
 	MPI_Init(&argc, &argv);
@@ -14,24 +12,25 @@ int main(int argc, char* argv[])
 	MPI_Comm_size(MPI_COMM_WORLD, &procSize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &procRank);
 
-	int* inputData = new int[ARRAY_SIZE];
+	int* inputData = (int*)malloc(ARRAY_SIZE * sizeof(int));
+	int i;
 	if (procRank == 0)
 	{
-		for (int i = 0; i < ARRAY_SIZE; ++i)
+		for (i = 0; i < ARRAY_SIZE; ++i)
 		{
 			inputData[i] = 1;
 		}
 	}
 
 	MPI_Bcast(inputData, ARRAY_SIZE, MPI_INT, 0, MPI_COMM_WORLD);
-	
+
 	double startTime = MPI_Wtime();
 
 	int subtotal = 0;
 
 	int workSize = ARRAY_SIZE / procSize;
 	int beginningPosition = workSize * procRank;
-	for (int i = beginningPosition; i < beginningPosition + workSize; ++i)
+	for (i = beginningPosition; i < beginningPosition + workSize; ++i)
 	{
 		subtotal += inputData[i];
 	}
@@ -45,5 +44,6 @@ int main(int argc, char* argv[])
 		printf("\nTime of work is = %f", end_time - startTime);
 	}
 	MPI_Finalize();
+	free(inputData);
 	return 0;
 }

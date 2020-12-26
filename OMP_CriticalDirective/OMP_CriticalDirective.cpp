@@ -5,9 +5,7 @@ const int ARRAY_SIZE = 1200000;
 
 int main()
 {
-#pragma comment(linker, "/STACK:16777216")
-
-	int* inputData = new int[ARRAY_SIZE];
+	int* inputData = (int*)malloc(ARRAY_SIZE * sizeof(int));
 	for (int i = 0; i < ARRAY_SIZE; ++i)
 	{
 		inputData[i] = 1;
@@ -19,12 +17,12 @@ int main()
 
 	double startTime = omp_get_wtime();
 
-	#pragma omp parallel shared(inputData, sum)
+#pragma omp parallel shared(inputData, sum)
 	{
-		#pragma omp for
+#pragma omp for
 		for (int i = 0; i < ARRAY_SIZE; ++i)
 		{
-			#pragma omp critical
+#pragma omp critical
 			{
 				sum += inputData[i];
 			}
@@ -34,7 +32,7 @@ int main()
 	double endTime = omp_get_wtime();
 
 	printf("\nTotal Sum = %d", sum);
-	printf("\nTime of work is = %f", endTime - startTime);
-
+	printf("\nTime of work is = %f\n", endTime - startTime);
+	free(inputData);
 	return 0;
 }
